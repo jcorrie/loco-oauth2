@@ -153,7 +153,8 @@ mod tests {
     use axum_extra::extract::PrivateCookieJar;
     use axum_test::TestServer;
     use http::header::{HeaderValue, COOKIE};
-    use loco_rs::config::{Config, Database, Logger, Server, Workers};
+    use loco_rs::app::SharedStore;
+    use loco_rs::config::{CacheConfig, Config, Database, Logger, Server, Workers};
     use loco_rs::controller::middleware::{self, request_id::RequestId};
     use loco_rs::environment::Environment;
     use loco_rs::storage::Storage;
@@ -161,6 +162,7 @@ mod tests {
     use sea_orm::DatabaseConnection;
     use serde_json::json;
     use std::collections::BTreeMap;
+    use std::sync::Arc;
 
     // Helper function to create a Key for encryption/decryption
     fn create_key() -> Key {
@@ -169,10 +171,12 @@ mod tests {
     // Helper function to create a default AppContext for testing
     fn create_default_app_context() -> AppContext {
         AppContext {
+            shared_store: Arc::new(SharedStore::default()),
             environment: Environment::Production,
             db: DatabaseConnection::default(),
             queue_provider: None,
             config: Config {
+                cache: CacheConfig::Null,
                 initializers: None,
                 logger: Logger::default(),
                 server: Server {
@@ -206,6 +210,7 @@ mod tests {
                     auto_migrate: false,
                     dangerously_truncate: false,
                     dangerously_recreate: false,
+                    run_on_start: None,
                 },
                 auth: None,
                 workers: Workers::default(),
